@@ -1,0 +1,14 @@
+{
+  "feishu_user_id": "ou_fdea45ee367625bbeba6138642f6a35b",
+  "http_proxy": "http://127.0.0.1:1082",
+  "socks5_proxy": "socks5://127.0.0.1:17890",
+  "douyin_cookies": "",
+  "log_file": "",
+  "push_threshold": 3,
+  "sources": {
+    "douyin": { "enabled": true, "use_browser": true, "board_type": 2, "rank_limit": 20 },
+    "weibo": { "enabled": true, "rank_limit": 15 },
+    "bilibili": { "enabled": true, "rank_limit": 10 },
+    "mainstream": { "enabled": true, "rank_limit": 5 }
+  }
+}

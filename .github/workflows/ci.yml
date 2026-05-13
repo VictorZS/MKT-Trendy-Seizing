@@ -1,0 +1,34 @@
+name: Health Check
+
+on:
+  schedule:
+    # 每小时运行一次，检验各平台 API 可用性
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -q playwright
+          playwright install chromium --with-deps
+
+      - name: Run health check
+        run: |
+          python scripts/hot_monitor_v1.py
+        env:
+          HTTP_PROXY: ${{ secrets.HTTP_PROXY }}
+          SOCKS5_PROXY: ${{ secrets.SOCKS5_PROXY }}
+          FEISHU_USER_ID: ${{ secrets.FEISHU_USER_ID }}
+          DOUYIN_COOKIES: ${{ secrets.DOUYIN_COOKIES }}
