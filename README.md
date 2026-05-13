@@ -1,142 +1,140 @@
 # 🔥 MKT-Trendy-Seizing
 
-热点情报监测系统 — 抖音 / 微博 / B站 / 主流媒体 四路信源并行抓取，定时推送到飞书。
-
-> **MKT = Market Intelligence**，核心定位：帮助市场/运营人员第一时间抓牢热点红利。
-
-## 功能特性
-
-| 信源 | 方式 | 默认数量 | 可配置 |
-|------|------|---------|--------|
-| 抖音实时上升热点 | Playwright Browser 模拟获取 Cookie → 调用 API | Top 20 | ✅ |
-| 微博热搜 | API 直连（走代理） | Top 15 | ✅ |
-| B站全站热榜 | API 直连 + 代理 Fallback | Top 15 | ✅ |
-| 主流媒体 | RSS（36kr + 网易） | Top 5 | ✅ |
-
-- **四路并行抓取**，总耗时 < 15s
-- **Browser 模拟**解决抖音 API 鉴权问题
-- 定时任务（每小时）推送到**飞书**
-- 原始数据本地存储（JSON）
-- 支持**选择性关闭**任意信源
-- 支持**调整每个信源的条目数量**
+> **我是谁**：热点情报监测系统 v1.0
+> **我能做什么**：抓取 抖音 / 微博 / B站 / 主流媒体 四路热点，汇总后推送到飞书
+> **适用场景**：每小时自动监测热点，市场/运营人员第一时间发现热点红利
 
 ---
 
-## ⚙️ 安装与配置
+## ✅ v1.0 能力清单
 
-### 快速安装
+| 能力 | 实现方式 | 默认数量 | 可关闭 |
+|------|---------|---------|--------|
+| 抖音实时上升热点 | Playwright 模拟浏览器获取 Cookie → 调用 API | Top 20 | ✅ |
+| 微博热搜 | API 直连（需 HTTP 代理） | Top 15 | ✅ |
+| B站全站热榜 | API 直连 + 代理 Fallback | Top 15 | ✅ |
+| 主流媒体资讯 | RSS（36kr + 网易） | Top 5 | ✅ |
+| 飞书推送 | lark-cli 发送消息到指定 open_id | — | ✅ |
+| 原始数据存储 | JSON 文件本地落盘 | — | ✅ |
 
-```bash
-git clone https://github.com/YOUR_USER/MKT-Trendy-Seizing.git
-cd MKT-Trendy-Seizing
-bash install.sh
-```
+---
 
-### 手动安装
-
-```bash
-pip install -r requirements.txt
-playwright install chromium
-cp config.example.json config.json
-# 编辑 config.json
-```
-
-### config.json 配置项
+## ⚙️ 可配置项（config.json）
 
 ```json
 {
-  "feishu_user_id": "飞书 open_id",
+  "feishu_user_id": "ou_xxxxxxxxxxxx",
   "http_proxy": "http://127.0.0.1:1082",
   "socks5_proxy": "socks5://127.0.0.1:17890",
   "douyin_cookies": "",
   "sources": {
-    "douyin":    { "enabled": true,  "rank_limit": 20 },
-    "weibo":     { "enabled": true,  "rank_limit": 15 },
-    "bilibili":  { "enabled": true,  "rank_limit": 15 },
-    "mainstream":{ "enabled": true,  "rank_limit": 5  }
+    "douyin":     { "enabled": true,  "rank_limit": 20 },
+    "weibo":      { "enabled": true,  "rank_limit": 15 },
+    "bilibili":   { "enabled": true,  "rank_limit": 15 },
+    "mainstream": { "enabled": true,  "rank_limit": 5  }
   }
 }
 ```
 
-**调整示例：**
-- 只监测抖音和微博：`"bilibili": {"enabled": false}`, `"mainstream": {"enabled": false}`
-- 抖音只抓 Top10：`"douyin": {"rank_limit": 10}`
-- 微博只抓 Top5：`"weibo": {"rank_limit": 5}`
+### 信源开关
+
+| 配置 | 效果 |
+|------|------|
+| `"douyin": {"enabled": false}` | 关闭抖音，只监测其他三路 |
+| `"weibo": {"enabled": false}` | 关闭微博 |
+| `"bilibili": {"enabled": false}` | 关闭B站 |
+| `"mainstream": {"enabled": false}` | 关闭主流媒体 |
+
+### 数量调整
+
+| 配置 | 效果 |
+|------|------|
+| `"douyin": {"rank_limit": 10}` | 抖音只抓 Top 10 |
+| `"weibo": {"rank_limit": 5}` | 微博只抓 Top 5 |
+| `"bilibili": {"rank_limit": 10}` | B站只抓 Top 10 |
+| `"mainstream": {"rank_limit": 3}` | 主流媒体只抓 Top 3 |
+
+### 常用配置示例
+
+```json
+// 只监测抖音和微博
+{ "douyin": {"enabled": true, "rank_limit": 20}, "weibo": {"enabled": true, "rank_limit": 15}, "bilibili": {"enabled": false}, "mainstream": {"enabled": false} }
+
+// 快速测试（只测微博5条）
+{ "douyin": {"enabled": false}, "weibo": {"enabled": true, "rank_limit": 5}, "bilibili": {"enabled": false}, "mainstream": {"enabled": false} }
+
+// 全开，抖音只抓10条
+{ "douyin": {"enabled": true, "rank_limit": 10} }
+```
 
 ---
 
-## 🚀 快速开始
+## 🚀 安装（其他 Agent 使用）
+
+### 方式一：作为 Hermes Skill 安装
 
 ```bash
-# 运行一次
+# 1. 把项目克隆到 Hermes skills 目录
+cp -r MKT-Trendy-Seizing ~/.hermes/skills/hot-monitor
+
+# 2. 安装依赖
+cd ~/.hermes/skills/hot-monitor
+pip install -r requirements.txt
+playwright install chromium
+
+# 3. 复制并编辑配置
+cp config.example.json config.json
+# 编辑 config.json，填入 feishu_user_id 和代理
+
+# 4. 创建定时任务（每小时）
+/cron create --name "热点监测 · 每小时" --schedule "0 * * * *" --skills hot-monitor --prompt "运行热点抓取脚本，四路信源并行抓取，结果推送飞书"
+```
+
+### 方式二：独立运行
+
+```bash
+git clone https://github.com/VictorZS/MKT-Trendy-Seizing.git
+cd MKT-Trendy-Seizing
+bash install.sh
 python scripts/hot_monitor_v1.py
-
-# 定时任务（每小时）
-0 * * * * /path/to/MKT-Trendy-Seizing/scripts/hot_monitor_v1.py
 ```
 
 ---
 
-## 📡 飞书接入
+## 🔔 触发方式
 
-确认 `config.json` 中 `feishu_user_id` 正确（必须是 lark-cli 应用下的 open_id）。
+对我说话时使用以下触发词，我会自动执行热点抓取：
 
-给机器人发送任意消息，通过 `lark-cli` 日志确认 open_id。
-
----
-
-## 🔧 常见问题
-
-**Q: 抖音返回空？**
-A: 抖音 API 需要浏览器 Cookie 中的 `__ac_signature`。Playwright 自动获取，如持续失败可手动注入 Cookie（`config.douyin_cookies`）。
-
-**Q: 微博返回空？**
-A: 确保 HTTP 代理可用，微博 API 必须走代理。
-
-**Q: B站一直是 0 条？**
-A: 直连失败后自动走代理 Fallback，确认代理配置正确。
-
-**Q: 飞书收不到消息？**
-A: 确认 `feishu_user_id` 是 lark-cli 对应应用的 open_id（openclaw 和 lark-cli 是不同飞书应用，open_id 不互通）。
+- "热点监测"、"每小时热点"、"抓热点"
+- "测一下抖音+微博"、"只测微博热搜"
+- "热点报告"、"生成今日热点"
 
 ---
 
-## 📦 其他 Agent 接入说明
+## 📡 飞书推送说明
 
-MKT-Trendy-Seizing 可作为 **Hermes Agent Skill** 使用。
-
-### 安装到 Hermes
-
-```bash
-# 把项目放入 Hermes skills 目录
-cp -r MKT-Trendy-Seizing ~/.hermes/skills/
-```
-
-### 设置定时任务
-
-在 Hermes 中创建 cron 任务：
-
-```
-/cron create --name "热点监测 · 每小时" \
-  --schedule "0 * * * *" \
-  --skills hot-monitor \
-  --prompt "运行 hot_monitor_v1.py，抓取四路热点并推送飞书"
-```
-
-### Skill 触发词
-
-- "热点监测"、"每小时热点"、"热点报告"
-- "监测抖音+微博"、"只测微博热搜"
+推送使用 `lark-cli`，需要填写正确的 `feishu_user_id`（必须是 lark-cli 对应应用的 open_id，不是 openclaw 的 open_id）。
 
 ---
 
-## 🗺️ 未来路线图
+## 🔧 依赖环境
+
+- Python 3.8+
+- `playwright`（Browser 模拟）
+- `urllib3`（HTTP 请求）
+- `lark-cli`（飞书消息推送）
+- HTTP 代理（微博/抖音 API 需要）
+- SOCKS5 代理（Playwright Chromium 浏览器流量）
+
+---
+
+## 🗺️ Roadmap
 
 | 版本 | 功能 |
 |------|------|
-| v1.0 | 四路信源抓取 + 飞书推送（当前版本） |
-| v1.1 | 直播间数据跟踪：淘宝/抖音/京东官方旗舰店 |
-| v1.2 | 抖音达人直播数据抓取（GMV/在线人数/热度） |
+| v1.0 | 四路信源抓取 + 飞书推送 ✅ |
+| v1.1 | 直播间数据跟踪（官方旗舰店）🔄 |
+| v1.2 | 抖音达人直播数据抓取（GMV/在线人数） |
 | v2.0 | 多维度热度分析 + 趋势预测 |
 
 ---
